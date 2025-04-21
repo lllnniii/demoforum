@@ -1,11 +1,11 @@
 from fastapi import APIRouter, HTTPException, Depends
 from typing import Annotated
-from back.models.replies import Reply as ReplyDB
-from back.models.posts import Post
-from back.schemas.replies import CreateReply, Reply
-from back.schemas.users import User
-from back.database.base import SessionDep
-from back.utils.auth import (get_current_active_user)
+from models.replies import Reply as ReplyDB
+from models.posts import Post
+from schemas.replies import CreateReply, Reply
+from schemas.users import User
+from database.base import SessionDep
+from utils.auth import (get_current_active_user)
 
 router = APIRouter(prefix="/replies", tags=["replies"])
 
