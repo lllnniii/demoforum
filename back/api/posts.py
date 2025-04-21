@@ -46,7 +46,7 @@ def delete_post(post_id: int, db: SessionDep,
                 current_user: Annotated[User, Depends(get_current_active_user)]):
     post = db.query(Post).filter(Post.id == post_id).first()
     if not post:
-        raise HTTPException(status_code=404, detail="Category not found")
+        raise HTTPException(status_code=404, detail="Post not found")
     if current_user.id == post.author_id:
         db.delete(post)
     db.commit()
