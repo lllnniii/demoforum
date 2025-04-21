@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>GreenTalk</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>@import url('https://fonts.googleapis.com/css2?family=M+PLUS+1p&display=swap');</style>
+</head>
+<body>
+    <header>
+        <div class="logo" onclick="showMainPage()">Green Talk</div>
+        <nav>
+            <a href="#" onclick="showMainPage()">Главная</a>
+            <a href="#" onclick="showPostsPage()">Посты</a>
+            <a href="#" onclick="showCategoriesPage()">Категории</a>
+            <a href="#" id="loginLink" onclick="showLoginModal()">Войти</a>
+            <a href="#" id="registerLink" onclick="showRegisterModal()">Регистрация</a>
+            <a href="#" id="accountLink" class="hidden" onclick="showAccountPage()">Аккаунт</a>
+            <a href="#" id="logoutLink" class="hidden" onclick="logout()">Выйти</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="sidebar">
+            <div id="mainSidebar">
+                <h3>Меню</h3>
+                <ul>
+                    <li onclick="showMainPage()">Главная</li>
+                    <li onclick="showPostsPage()">Все посты</li>
+                    <li onclick="showCategoriesPage()">Категории</li>
+                    <li id="myPostsLink" class="hidden" onclick="showUserPosts()">Мои посты</li>
+                </ul>
+            </div>
+
+            <div id="postsSidebar" class="hidden">
+                <div class="search-box">
+                    <input type="text" id="postSearch" placeholder="Поиск постов" onkeyup="searchPosts()">
+                </div>
+                <h3>Последние посты</h3>
+                <ul class="post-list" id="postList">
+                    <!-- Посты будут загружены здесь -->
+                </ul>
+            </div>
+
+            <div id="categoriesSidebar" class="hidden">
+                <div class="search-box">
+                    <input type="text" id="categorySearch" placeholder="Поиск категорий" onkeyup="searchCategories()">
+                </div>
+                <h3>Категории</h3>
+                <ul class="category-list" id="categoryList">
+                    <!-- Категории будут загружены здесь -->
+                </ul>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div id="mainPage">
+                <h2>Добро пожаловать в Green Talk</h2>
+                <p>Выберите раздел в меню слева</p>
+                <div id="recentPosts" class="hidden">
+                    <h3>Последние посты</h3>
+                    <div id="recentPostsContainer"></div>
+                </div>
+            </div>
+
+            <div id="postsPage" class="hidden">
+                <div class="posts-header">
+                    <h2>Все посты</h2>
+                    <button id="createPostBtn" class="create-post-btn hidden" onclick="showCreatePostForm()">
+                        Создать пост
+                    </button>
+                </div>
+                <div id="postsContainer">
+                    <!-- Посты будут загружены здесь -->
+                </div>
+            </div>
+
+            <div id="singlePostPage" class="hidden">
+                <div id="postDetail">
+                    <!-- Один пост будет загружен здесь -->
+                </div>
+            </div>
+
+            <div id="categoriesPage" class="hidden">
+                <h2>Категории</h2>
+                <div id="categoriesContainer">
+                    <!-- Категории будут загружены здесь -->
+                </div>
+            </div>
+
+            <div id="categoryPostsPage" class="hidden">
+                <h2 id="categoryPostsTitle">Посты категории</h2>
+                <div id="categoryPostsContainer">
+                    <!-- Посты категории будут загружены здесь -->
+                </div>
+            </div>
+
+            <div id="accountPage" class="hidden">
+                <div class="user-profile">
+                    <h2>Профиль пользователя</h2>
+                    <div class="user-info">
+                        <div class="user-detail">
+                            <span class="detail-label">ID:</span>
+                            <span id="profileId"></span>
+                        </div>
+                        <div class="user-detail">
+                            <span class="detail-label">Имя пользователя:</span>
+                            <span id="profileUsername"></span>
+                            <input type="text" id="editUsername" class="hidden">
+                        </div>
+                        <div class="user-detail">
+                            <span class="detail-label">Email:</span>
+                            <span id="profileEmail"></span>
+                            <input type="email" id="editEmail" class="hidden">
+                        </div>
+                        <div class="user-detail">
+                            <label for="editPassword">Новый пароль:</label>
+                            <input type="password" id="editPassword" placeholder="Введите новый пароль" />
+                        </div>
+                        <div class="user-detail">
+                            <span class="detail-label">Дата регистрации:</span>
+                            <span id="profileRegDate"></span>
+                        </div>
+                        <div class="user-actions">
+                            <button id="editProfileBtn" class="edit-btn">Изменить данные</button>
+                            <div class="edit-controls hidden" id="editControls">
+                                <button class="save-btn">Сохранить</button>
+                                <button class="cancel-btn">Отмена</button>
+                            </div>
+                            <button class="logout-btn" onclick="logout()">Выйти</button>
+                        </div>
+                    </div>
+                    <div class="user-posts">
+                        <h3>Мои посты</h3>
+                        <div id="userPostsContainer"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="createPostPage" class="hidden">
+                <div class="create-post-form">
+                    <h3>Создать новый пост</h3>
+                    <input type="text" id="postTitle" placeholder="Заголовок поста" required>
+                    <textarea id="postContent" placeholder="Содержание поста" required></textarea>
+                    <select id="postCategory">
+                        <!-- Категории будут загружены здесь -->
+                    </select>
+                    <button onclick="createPost()">Опубликовать</button>
+                    <button class="back-button" onclick="showPostsPage()">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно авторизации -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <div class="auth-form">
+                <h2>Вход</h2>
+                <div class="error-message" id="loginError"></div>
+                <input type="text" id="loginUsername" placeholder="Имя пользователя">
+                <input type="password" id="loginPassword" placeholder="Пароль">
+                <button class="primary-btn" onclick="login()">Войти</button>
+                <button class="secondary-btn" onclick="hideModal('loginModal')">Отмена</button>
+                <p style="text-align: center; margin-top: 1rem;">
+                    Нет аккаунта? <a href="#" onclick="switchToRegister()">Зарегистрируйтесь</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно регистрации -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <div class="auth-form">
+                <h2>Регистрация</h2>
+                <div class="error-message" id="registerError"></div>
+                <input type="text" id="registerUsername" placeholder="Имя пользователя">
+                <input type="email" id="registerEmail" placeholder="Email">
+                <input type="password" id="registerPassword" placeholder="Пароль">
+                <button class="primary-btn" onclick="register()">Зарегистрироваться</button>
+                <button class="secondary-btn" onclick="hideModal('registerModal')">Отмена</button>
+                <p style="text-align: center; margin-top: 1rem;">
+                    Уже есть аккаунт? <a href="#" onclick="switchToLogin()">Войдите</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
