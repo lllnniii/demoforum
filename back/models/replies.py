@@ -1,8 +1,8 @@
-from back.database.base import Base
+from database.base import Base
 from sqlalchemy import Column, Integer, ForeignKey, String, Boolean, func, DateTime
 from sqlalchemy.orm import relationship
-from back.models.users import User
-from back.models.posts import Post
+from models.users import User
+from models.posts import Post
 
 
 class Reply(Base):
