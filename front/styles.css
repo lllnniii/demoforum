@@ -363,7 +363,8 @@ nav a:hover {
 
 
 .profile-section input[type="text"],
-.profile-section input[type="email"] {
+.profile-section input[type="email"],
+.profile-section input[type="password"] {
     width: 100%;
     padding: 8px;
     margin: 5px 0;
@@ -413,5 +414,96 @@ nav a:hover {
 }
 
 .create-post-form button:hover {
+    background-color: var(--primary-light);
+}
+
+/* Стили для комментариев */
+.comments-section {
+    margin-top: 2rem;
+    padding: 1rem;
+    border-top: 1px solid #eee;
+}
+
+.comment {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.comment-author {
+    font-weight: bold;
+    color: var(--primary);
+}
+
+.comment-date {
+    color: #999;
+}
+
+.comment-content {
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+.comment-actions {
+    text-align: right;
+    margin-top: 0.5rem;
+}
+
+.delete-btn {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.view-post-btn {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    margin-left: 0.5rem;
+}
+
+.add-comment-form {
+    margin-top: 1rem;
+}
+
+.add-comment-form textarea {
+    width: 100%;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    resize: vertical;
+    min-height: 80px;
+}
+
+#showCommentFormBtn {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    margin-top: 1rem;
+    cursor: pointer;
+}
+
+#showCommentFormBtn:hover {
     background-color: var(--primary-light);
 }
