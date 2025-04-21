@@ -3,7 +3,7 @@ from fastapi.staticfiles import StaticFiles
 import uvicorn
 from database.base import Base, engine
 import models
-from api import auth as auth_r, users as users_r, categories as categories_r, posts as posts_r
+from api import auth as auth_r, users as users_r, categories as categories_r, posts as posts_r, replies as replies_r)
 from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -28,6 +28,8 @@ app.include_router(categories_r.router)
 app.include_router(auth_r.router)
 app.include_router(users_r.router)
 app.include_router(posts_r.router)
+app.include_router(replies_r.router)
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="localhost", port=8000)
