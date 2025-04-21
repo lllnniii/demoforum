@@ -51,11 +51,18 @@ function showPostsPage() {
     loadPostsForSidebar();
 }
 
-function showSinglePost(postId) {
+
+async function showSinglePost(postId) {
     hideAllPages();
     pages.singlePost.classList.remove('hidden');
-    loadSinglePost(postId);
+    
+    // Сохраняем ID поста в data-атрибут для формы комментария
+    document.getElementById('postDetail').dataset.postId = postId;
+    
+    await loadSinglePost(postId);
+    await loadComments(postId);
 }
+
 
 function showCategoryPosts(categoryId, categoryName = null) {
     hideAllPages();
@@ -223,7 +230,7 @@ async function loadUserPosts() {
                     <small style="color: #666; display: block; margin-top: 5px;">
                         ${post.created_at ? new Date(post.created_at).toLocaleString() : 'Дата не указана'}
                     </small>
-                    <button onclick="showSinglePost(${post.id})" 
+                    <button class="view-post-btn" onclick="showSinglePost(${post.id})" 
                             style="background: #4CAF50; color: white; border: none; padding: 8px 16px; 
                                    margin-top: 10px; border-radius: 4px; cursor: pointer;">
                         Подробнее
@@ -284,7 +291,24 @@ async function loadSinglePost(postId) {
             }
         }
 
-        displaySinglePost(post, authorName);
+        // Отображаем пост и сохраняем ID для комментариев
+        const container = document.getElementById('postDetail');
+        container.innerHTML = `
+            <div class="post-title">${post.title}</div>
+            <div class="post-meta">
+                <span>Автор: ${authorName}</span>
+                <span>Категория: ${post.category_id}</span>
+                <span>Дата: ${new Date(post.created_at).toLocaleString()}</span>
+            </div>
+            <div class="post-content">${post.content}</div>
+            ${currentUser && post.author_id === currentUser.id ?
+              `<button class="delete-btn" onclick="deletePost(${post.id})" style="background-color: #f8d7da;">Удалить пост</button>` : ''}
+            <button class="back-button" onclick="${currentCategoryId ? `showCategoryPosts(${currentCategoryId})` : 'showPostsPage()'}">Назад к списку</button>
+        `;
+        container.dataset.postId = post.id; // Сохраняем ID поста для комментариев
+
+        // Загружаем комментарии после отображения поста
+        await loadComments(postId);
     } catch (error) {
         console.error('Ошибка загрузки поста:', error);
         document.getElementById('postDetail').innerHTML = '<p>Ошибка загрузки поста</p>';
@@ -335,19 +359,24 @@ function displayPosts(posts, containerId) {
     posts.forEach(post => {
         const postElement = document.createElement('div');
         postElement.className = 'post-detail';
+        
+        // Получаем имя автора из кэша или используем ID
         const authorName = authorsCache[post.author_id] || `ID: ${post.author_id}`;
+        
+        // Получаем название категории из кэша или используем ID
+        const categoryName = categoriesCache.find(c => c.id === post.category_id)?.name || `Категория ${post.category_id}`;
 
         postElement.innerHTML = `
             <div class="post-title">${post.title}</div>
             <div class="post-meta">
                 <span>Автор: ${authorName}</span>
-                <span>Категория: ${post.category_id}</span>
+                <span>Категория: ${categoryName}</span>
                 <span>Дата: ${new Date(post.created_at).toLocaleString()}</span>
             </div>
-            <div class="post-content">${post.content.substring(0, 100)}...</div>
-            <button onclick="showSinglePost(${post.id})">Подробнее</button>
+            <div class="post-content">${post.content.substring(0, 100)}${post.content.length > 100 ? '...' : ''}</div>
+            <button class="view-post-btn" onclick="showSinglePost(${post.id})" >Подробнее</button>
             ${currentUser && post.author_id === currentUser.id ?
-              `<button onclick="deletePost(${post.id})" style="margin-left: 0.5rem; background-color: #f8d7da;">Удалить</button>` : ''}
+              `<button class="delete-btn" onclick="deletePost(${post.id})" style="margin-left: 0.5rem; background-color: #f8d7da;">Удалить</button>` : ''}
         `;
         container.appendChild(postElement);
     });
@@ -377,9 +406,186 @@ function displaySinglePost(post, authorName) {
         </div>
         <div class="post-content">${post.content}</div>
         ${currentUser && post.author_id === currentUser.id ?
-          `<button onclick="deletePost(${post.id})" style="background-color: #f8d7da;">Удалить пост</button>` : ''}
+          `<button class="delete-btn" onclick="deletePost(${post.id})" style="background-color: #f8d7da;">Удалить пост</button>` : ''}
         <button class="back-button" onclick="${currentCategoryId ? `showCategoryPosts(${currentCategoryId})` : 'showPostsPage()'}">Назад к списку</button>
     `;
+}
+
+// Функция для загрузки комментариев к посту
+async function loadComments(postId) {
+    console.log(`Загрузка комментариев для поста ${postId}`);
+    const container = document.getElementById('commentsContainer');
+    container.innerHTML = '<div class="loading">Загрузка комментариев...</div>';
+    
+    try {
+        const headers = {};
+        const token = localStorage.getItem('access_token');
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        const response = await fetch(`${API_BASE}/replies/replies_of_post/${postId}`, {
+            headers
+        });
+        
+        console.log('Статус ответа:', response.status);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Ошибка сервера:', errorText);
+            throw new Error(errorText || 'Ошибка загрузки комментариев');
+        }
+        
+        const comments = await response.json();
+        console.log('Получено комментариев:', comments.length);
+        
+        container.innerHTML = '';
+        
+        if (comments.length === 0) {
+            container.innerHTML = '<p>Пока нет комментариев. Будьте первым!</p>';
+            return;
+        }
+        
+        // Сортировка по дате (новые сначала)
+        comments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        
+        comments.forEach(comment => {
+    const commentElement = document.createElement('div');
+    commentElement.className = 'comment';
+    
+    // Получаем имя автора комментария
+    const authorName = comment.author?.username || 
+                      authorsCache[comment.author_id] || 
+                      `Пользователь ${comment.author_id}`;
+    
+    commentElement.innerHTML = `
+        <div class="comment-header">
+            <span class="comment-author">${authorName}</span>
+            <span class="comment-date">${new Date(comment.created_at).toLocaleString()}</span>
+        </div>
+        <div class="comment-content">${comment.content}</div>
+        ${currentUser && currentUser.id === comment.author_id ? 
+            `<div class="comment-actions">
+                <button class="delete-btn" onclick="deleteComment(${comment.id})">Удалить</button>
+            </div>` : ''}
+    `;
+    container.appendChild(commentElement);
+});
+        
+        // Показываем форму для авторизованных пользователей
+        if (currentUser) {
+            document.getElementById('showCommentFormBtn').classList.remove('hidden');
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки комментариев:', error);
+        container.innerHTML = `<p class="error">Ошибка: ${error.message}</p>`;
+    }
+}
+
+// Показать форму добавления комментария
+function showCommentForm() {
+    document.getElementById('addCommentForm').classList.remove('hidden');
+    document.getElementById('showCommentFormBtn').classList.add('hidden');
+}
+
+// Отправить комментарий
+async function submitComment() {
+    const text = document.getElementById('commentText').value.trim();
+    if (!text) return;
+    
+    try {
+        const postId = document.getElementById('postDetail').dataset.postId;
+        const response = await fetch(`${API_BASE}/replies/new`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            },
+            body: JSON.stringify({
+                content: text,
+                post_id: parseInt(postId)
+            })
+        });
+        
+        if (!response.ok) throw new Error('Ошибка при отправке комментария');
+        
+        document.getElementById('commentText').value = '';
+        loadComments(postId);
+        document.getElementById('addCommentForm').classList.add('hidden');
+        document.getElementById('showCommentFormBtn').classList.remove('hidden');
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Не удалось отправить комментарий');
+    }
+}
+
+// Удалить комментарий
+async function deleteComment(commentId) {
+    if (!confirm('Вы уверены, что хотите удалить этот комментарий?')) return;
+    
+    try {
+        const response = await fetch(`${API_BASE}/replies/delete/${commentId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            }
+        });
+        
+        if (!response.ok) throw new Error('Ошибка при удалении комментария');
+        
+        const postId = document.getElementById('postDetail').dataset.postId;
+        loadComments(postId);
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Не удалось удалить комментарий');
+    }
+}
+
+// Загрузка комментариев пользователя
+async function loadUserComments() {
+    if (!currentUser) return;
+    
+    try {
+        const response = await fetch(`${API_BASE}/replies/user/my`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            }
+        });
+        
+        if (!response.ok) throw new Error('Ошибка загрузки комментариев');
+        
+        const comments = await response.json();
+        const container = document.getElementById('userCommentsContainer');
+        container.innerHTML = '';
+        
+        if (comments.length === 0) {
+            container.innerHTML = '<p>Вы еще не оставляли комментариев</p>';
+            return;
+        }
+        
+        // Сортируем комментарии (новые сначала)
+        comments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        
+        comments.forEach(comment => {
+            const commentElement = document.createElement('div');
+            commentElement.className = 'comment';
+            commentElement.innerHTML = `
+                <div class="comment-header">
+                    <span>К посту: ${comment.post.title}</span>
+                    <span class="comment-date">${new Date(comment.created_at).toLocaleString()}</span>
+                </div>
+                <div class="comment-content">${comment.content}</div>
+                <div class="comment-actions">
+                    <button class="delete-btn" onclick="deleteComment(${comment.id})">Удалить</button>
+                    <button class="view-post-btn" onclick="showSinglePost(${comment.post_id})">Перейти к посту</button>
+                </div>
+            `;
+            container.appendChild(commentElement);
+        });
+    } catch (error) {
+        console.error('Ошибка:', error);
+        document.getElementById('userCommentsContainer').innerHTML = '<p>Не удалось загрузить комментарии</p>';
+    }
 }
 
 function displayCategories(categories) {
@@ -392,7 +598,7 @@ function displayCategories(categories) {
         categoryElement.innerHTML = `
             <div class="post-title">${category.name}</div>
             <div class="post-content">${category.description || 'Нет описания'}</div>
-            <button onclick="showCategoryPosts(${category.id}, '${category.name}')">Показать посты</button>
+            <button class="view-post-btn" onclick="showCategoryPosts(${category.id}, '${category.name}')">Показать посты</button>
         `;
         container.appendChild(categoryElement);
     });
