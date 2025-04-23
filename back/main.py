@@ -3,7 +3,7 @@ from fastapi.staticfiles import StaticFiles
 import uvicorn
 from database.base import Base, engine
 import models
-from api import auth as auth_r, users as users_r, categories as categories_r, posts as posts_r, replies as replies_r)
+from api import auth as auth_r, users as users_r, categories as categories_r, posts as posts_r, replies as replies_r
 from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 
